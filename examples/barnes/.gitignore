@@ -1,0 +1,9 @@
+*.o
+bh
+*.decl.h
+*.def.h
+charmrun
+*.swp
+*.swo
+*.ps
+*.dot

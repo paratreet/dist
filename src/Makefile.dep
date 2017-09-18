@@ -1,0 +1,20 @@
+mdt.o: \
+mdt.cpp \
+mdt.h \
+mdt.decl.h \
+ForwardDecls.h \
+Node.h \
+Manager.h \
+Utility.h \
+CacheInterface.h \
+Handle.h \
+CachedData.h \
+Piece.h \
+TraversalManager.h \
+Reduce.h \
+TraversalHandle.h \
+CacheAccessType.h \
+CacheManager.h \
+CacheClientTraversals.h \
+Factory.h \
+

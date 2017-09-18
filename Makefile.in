@@ -1,0 +1,7 @@
+# Find absolute path to this directory:
+#  enclosing Makefile needs to put enough DOTS to get here.
+HERE = $(DOTS)
+
+CHARM_PATH = $(HERE)/../charm
+STRUCTURES_PATH = $(HERE)/examples/barnes/structures
+BARNES_PATH= $(HERE)/examples/barnes

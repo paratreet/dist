@@ -1,0 +1,3 @@
+Orb3dLB.o: \
+Orb3dLB.decl.h \
+Orb3dLB.def.h

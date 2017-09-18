@@ -1,0 +1,9 @@
+Main.o: \
+Main.cpp \
+Main.h \
+pgm.decl.h \
+DataInterface.h \
+defines.h \
+mdt.h \
+mdt.decl.h \
+

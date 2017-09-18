@@ -1,0 +1,44 @@
+Distree is a parallel tree framework built on the Charm++ parallel programming system
+Prerequistes for Distree: Charm++
+
+Barnes Hut algorithm is a tree based scheme to compute fast and approximate time series to the
+N-body problem. This version of Barnes Hut is implemented using Distree.
+Prerequisites for Barnes Hut: Distree
+
+------------------------------------------------------------------------------------------------------
+Instructions to build Distree:
+------------------------------------------------------------------------------------------------------
+1) Get the latest version of charm++ from the PPL website and install charm++.
+          git clone https://charm.cs.illinois.edu/gerrit/charm
+          git checkout nitin/charm_distree
+          ./build charm++ netlrts-darwin-x86_64 -j4 smp
+
+2) Build the charm++ cache library
+          cd $CHARM_PATH/src/libs/ck-libs/cache
+          make
+
+3) Edit the Makefile.in to set CHARM_PATH to point to the installed charm++ directory
+          CHARM_PATH = /dcsdata/home/nbhat4/Work/software/charm
+   (The default CHARM_PATH is one level up from distree)
+
+4) Run make in src/ to build the distree library libmodulemdt.a
+
+
+------------------------------------------------------------------------------------------------------
+Instructions to build and run Barnes Hut/SPH:
+------------------------------------------------------------------------------------------------------
+1) Build Distree
+
+2) Run 'make test' in examples/barnes to build and run barnes hut and SPH
+
+
+------------------------------------------------------------------------------------------------------
+Instructions to generate input files for Barnes Hut and SPH:
+------------------------------------------------------------------------------------------------------
+1) Run make inside the inputfiles directory in the barnes directory
+
+2) Generate a dataset: ./plummer 0 10000 1k.dat
+   usage: ./plummer <mode write:0; read:1> <numparticles> <output plummer model file>
+
+3) Generate the dataset in tipsy format: ./tipsyPlummer 1k.dat 1k.tipsy
+   usage: ./tipsyPlummer <output plummer model file> <output tipsy model file>

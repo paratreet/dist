@@ -1,0 +1,120 @@
+module mdt {
+
+  extern module CkCache;
+
+  include "ForwardDecls.h";
+
+  namespace MultiphaseDistree {
+
+    initnode void InitializeReducers();
+    
+    template<typename DataInterface> 
+    array [1D] Piece {
+      entry void initialize(const Handle<DataInterface> &handle, const CkCallback &cb);
+
+      entry void registration(const PointerContainer<DATA_INTERFACE_NODE_TYPE_MACRO> &n);
+
+      // this is used during tree building
+      entry void requestPayload(DATA_INTERFACE_KEY_TYPE_MACRO key, int replyTo);
+
+      // and these, during tree traversal
+      template<typename TraversalDataInterface>
+      entry void requestNode(DATA_INTERFACE_KEY_TYPE_MACRO key, const CProxy_CkCacheManager<DATA_INTERFACE_KEY_TYPE_MACRO> &cacheProxy, int replyTo);
+
+      template<typename TraversalDataInterface>
+      entry void requestLeafContents(DATA_INTERFACE_KEY_TYPE_MACRO key, const CProxy_CkCacheManager<DATA_INTERFACE_KEY_TYPE_MACRO> &cacheProxy, int replyTo);
+
+      // NOT SUPPORTED CURRENTLY
+      /*
+      template<typename TraversalDataInterface>
+      entry void accumulateNodes(CkCacheFillMsg<DATA_INTERFACE_KEY_TYPE_MACRO> *msg);
+      */
+
+      template<typename TraversalDataInterface>
+      entry void accumulateLeafContents(CkCacheFillMsg<DATA_INTERFACE_KEY_TYPE_MACRO> *msg);
+
+      // called by tree manager when it's time to
+      // take down the tree 
+      entry void deleteLocalTree(const PointerContainer<DATA_INTERFACE_NODE_TYPE_MACRO > &root);
+
+      // debugging
+      entry void quiescence(); 
+    };
+
+    // Group that manages construction and consolidation of distributed tree
+    template<typename DataInterface>
+    nodegroup Manager {
+      entry Manager(int cacheChunkDepth);
+      entry void initialize(const Handle<DataInterface> &hdl, const CkCallback &cb);
+
+      entry [exclusive] void registration(const PointerContainer<DATA_INTERFACE_NODE_TYPE_MACRO > &localRoot, 
+                                          const PointerContainer<Piece<DataInterface> > &piece);
+
+      entry [exclusive] void syncToMerge(const CkCallback &cb);
+      // called by tree piece after we have given it
+      // a subtree rooted at its node as its tree
+      entry [exclusive] void doneRegistration(const PointerContainer<DATA_INTERFACE_NODE_TYPE_MACRO> &n);
+
+      entry [exclusive] void requestPayload(DATA_INTERFACE_KEY_TYPE_MACRO key, int replyTo);
+      entry [exclusive] void receivePayload(DATA_INTERFACE_KEY_TYPE_MACRO key, const DATA_INTERFACE_PAYLOAD_TYPE_MACRO &payload);
+
+      // NOT SUPPORTED CURRENTLY
+      /*
+      template<typename TraversalDataInterface>
+      entry [exclusive] void accumulateNodes(CkCacheFillMsg<DATA_INTERFACE_KEY_TYPE_MACRO> *msg);
+      */
+
+      // not needed, because leaves are always private to 
+      // pieces, so requests to accumulate to them should be
+      // handled by pieces, and shouldn't be forward to managers
+      /*
+      template<typename TraversalDataInterface>
+      entry void accumulateLeafContents(CkCacheFillMsg<DATA_INTERFACE_KEY_TYPE_MACRO> *msg);
+      */
+
+      entry [exclusive] void syncToDelete(const CkCallback &cb);
+
+      entry [exclusive] void doneDelete();
+      // for debugging
+      entry void quiescence(); 
+      entry void quiescence2(CkReductionMsg *m); 
+
+    };
+
+    // this array is required to interface with the 
+    // cache manager, whose callbacks are addressed to
+    // an array
+    template<typename DataInterface>
+    array [1D] TraversalManager {
+    };
+
+    // traverse the global tree in a top-down manner, 
+    // once for every local leaf
+    template<typename TraversalDataInterface>
+    array [1D] LeafNodeTopDownTraversalManager : TraversalManager<TraversalDataInterface> {
+      entry LeafNodeTopDownTraversalManager(bool doNodeWriteback, bool doLeafWriteback);
+
+      // iterator-like interface
+      entry void initialize(const Handle<TRAVERSAL_DATA_INTERFACE_TREE_BUILD_DATA_INTERFACE_TYPE_MACRO> &handle, const CProxy_CkCacheManager<TRAVERSAL_DATA_INTERFACE_KEY_TYPE_MACRO> &nodeCacheProxy, const CProxy_CkCacheManager<TRAVERSAL_DATA_INTERFACE_KEY_TYPE_MACRO> &particleCacheProxy, const CkCallback &cb);
+
+      entry void synchronize(const CkCallback &cb);
+      entry void done(const CkCallback &cb);
+      entry void statistics(const CkCallback &cb);
+
+      // this version is called by the completion 
+      // detector library after it has finished its
+      // initialization. simply invokes done with an
+      // 'ignore' callback
+      entry void callDone();
+    };
+
+    // traverse the global tree in a bottom-up manner, 
+    // once for every local leaf
+    template<typename TraversalDataInterface>
+    array [1D] LeafNodeBottomUpTraversalManager : LeafNodeTopDownTraversalManager<TraversalDataInterface> {
+      entry LeafNodeBottomUpTraversalManager(bool doNodeWriteback, bool doLeafWriteback);
+    };
+
+  } // namespace
+
+} // module

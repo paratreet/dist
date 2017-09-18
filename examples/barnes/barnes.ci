@@ -1,0 +1,124 @@
+mainmodule barnes {
+  extern module Orb3dLB;
+
+  include "TemplateInstanceTypedefs.h";
+  include "ParamStorage.h";
+  include "BoundingBox.h";
+  include "DataInterface.h";
+  include "Particle.h";
+  include "MultipoleMoments.h";
+  include "NodePayload.h";
+  include "Splitter.h";
+  include "Visitor.h";
+  include "Resumption.h";
+
+  readonly ParamStorage parameters;
+  readonly CProxy_TreePiece treePieceProxy;
+  readonly CProxy_SphShadow sphShadowProxy;
+  readonly CProxy_Decomposer decomposerProxy;
+  readonly CProxy_SplitterGroup splitterGroupProxy;
+  readonly CProxy_LbOnOffGroup lbOnOffGroupProxy;
+
+  readonly MyTreeHandleType treeHandle;
+  readonly GravityVisitor::TraversalHandleType gravityTraversalHandle;
+  readonly DensitySphVisitor::TraversalHandleType sphDensityTraversalHandle;
+  readonly BallSphVisitor::TraversalHandleType sphBallTraversalHandle;
+
+  extern module mdt;
+
+  message ParticleMsg {
+    Particle particles[];
+  };
+
+  mainchare Main {
+    entry Main(CkArgMsg *msg);
+    entry [threaded] void commence();
+    entry void gravityDone(CkReductionMsg *m);
+    entry void sphDone(CkReductionMsg *m);
+  };
+
+  array [1D] TreePiece : MultiphaseDistree::Piece<TreeBuildDataInterface> {
+    entry TreePiece();
+    entry void load(const CkCallback &cb);
+    entry void assignKeys(BoundingBox &box, const CkCallback &cb);
+    entry void count(CkVec<Key> &keys, const CkCallback &cb); 
+    entry void flush(const CkCallback &cb); 
+    entry void particles(ParticleMsg *msg);
+    entry void build(const CkCallback &cb);
+    entry void gravity(const CkCallback &cb);
+    entry void doGravity();
+    entry void sph(const CkCallback &cb);
+    entry void doSph();
+    entry void ballSph(const CkCallback &cb);
+    entry void doBallSph();
+    entry void integrate(const CkCallback &cb);
+
+    // resume gravity computation on suspended traversal
+    entry [local] void resumeGravityNode(const NodeResumption<GravityVisitor> &resumption);
+    entry [local] void resumeGravityLeaf(const LeafResumption<GravityVisitor> &resumption);
+
+    // resume density sph traversal
+    entry [local] void resumeDensitySphNode(const NodeResumption<DensitySphVisitor> &resumption);
+    entry [local] void resumeDensitySphLeaf(const LeafResumption<DensitySphVisitor> &resumption);
+
+    // resume ball sph traversal
+    entry [local] void resumeBallSphNode(const NodeResumption<BallSphVisitor> &resumption);
+    entry [local] void resumeBallSphLeaf(const LeafResumption<BallSphVisitor> &resumption);
+
+    entry [threaded] void balanceLoad(const CkCallback &cb);
+    entry void sendCentroids();
+    entry void callAtSync();
+  };
+
+  array [1D] SphShadow {
+    entry SphShadow();
+  }
+
+  chare Decomposer {
+    entry Decomposer();
+    entry [threaded] void decompose(BoundingBox &bb, const CkCallback &cb);
+  };
+
+  group SplitterGroup {
+    entry SplitterGroup();
+    entry void splitters(CkVec<Splitter> &splitters, const CkCallback &cb);
+  };
+
+  group LbOnOffGroup {
+    entry LbOnOffGroup();
+    entry void on(const CkCallback &cb);
+    entry void off(const CkCallback &cb);
+  };
+
+  namespace MultiphaseDistree {
+    array [1D] Piece<TreeBuildDataInterface>;
+    group Manager<TreeBuildDataInterface>;
+    array [1D] TraversalManager<GravityTraversalDataInterface>;
+    array [1D] TraversalManager<SphDensityTraversalDataInterface>;
+    array [1D] TraversalManager<SphBallTraversalDataInterface>;
+    array [1D] LeafNodeTopDownTraversalManager<GravityTraversalDataInterface>;
+    array [1D] LeafNodeBottomUpTraversalManager<SphDensityTraversalDataInterface>;
+    array [1D] LeafNodeTopDownTraversalManager<SphBallTraversalDataInterface>;
+
+    // TEMPLATE METHOD INSTANTIATIONS for REQUESTS
+    // gravity requests
+    extern entry void Piece<TreeBuildDataInterface> requestNode<GravityTraversalDataInterface>(Key key, const CProxy_CkCacheManager<Key> &cacheProxy, int replyTo);
+
+    extern entry void Piece<TreeBuildDataInterface> requestLeafContents<GravityTraversalDataInterface>(Key key, const CProxy_CkCacheManager<Key> &cacheProxy, int replyTo);
+
+    // sph density requests
+    extern entry void Piece<TreeBuildDataInterface> requestNode<SphDensityTraversalDataInterface>(Key key, const CProxy_CkCacheManager<Key> &cacheProxy, int replyTo);
+
+    extern entry void Piece<TreeBuildDataInterface> requestLeafContents<SphDensityTraversalDataInterface>(Key key, const CProxy_CkCacheManager<Key> &cacheProxy, int replyTo);
+
+    // sph ball requests
+    extern entry void Piece<TreeBuildDataInterface> requestNode<SphBallTraversalDataInterface>(Key key, const CProxy_CkCacheManager<Key> &cacheProxy, int replyTo);
+
+    extern entry void Piece<TreeBuildDataInterface> requestLeafContents<SphBallTraversalDataInterface>(Key key, const CProxy_CkCacheManager<Key> &cacheProxy, int replyTo);
+
+    // TEMPLATE METHOD INSTANTIATIONS FOR WRITEBACKS
+    extern entry void Piece<TreeBuildDataInterface> accumulateLeafContents<SphBallTraversalDataInterface>(CkCacheFillMsg<Key> *msg);
+
+  }
+
+};

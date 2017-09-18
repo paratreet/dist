@@ -1,0 +1,22 @@
+mainmodule pgm {
+  include "DataInterface.h";
+
+  extern module mdt;
+
+  mainchare Main {
+    entry Main(CkArgMsg *msg);
+    entry [reductiontarget] void done(void);
+  };
+
+  array [1D] TreePiece : MultiphaseDistree::Piece<TreeDataInterface> {
+    entry TreePiece();
+    
+    entry void runTreeWork(CkCallback cb);
+  };
+
+  namespace MultiphaseDistree {
+    array [1D] Piece<TreeDataInterface>;
+    group Manager<TreeDataInterface>;
+  }
+
+};
