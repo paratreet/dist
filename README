@@ -1,44 +1,48 @@
-Distree is a parallel tree framework built on the Charm++ parallel programming system
-Prerequistes for Distree: Charm++
+------------------
+| ParaTreeT-dist |
+------------------
 
-Barnes Hut algorithm is a tree based scheme to compute fast and approximate time series to the
-N-body problem. This version of Barnes Hut is implemented using Distree.
-Prerequisites for Barnes Hut: Distree
+This repository contains code for ParaTreeT-dist, a distributed version of the
+ParaTreeT library written in Charm++.
+It is will be merged into the mainline ParaTreeT library with the rest of the
+branched implementations.
 
-------------------------------------------------------------------------------------------------------
-Instructions to build Distree:
-------------------------------------------------------------------------------------------------------
-1) Get the latest version of charm++ from the PPL website and install charm++.
-          git clone https://charm.cs.illinois.edu/gerrit/charm
-          git checkout nitin/charm_distree
-          ./build charm++ netlrts-darwin-x86_64 -j4 smp
+* Examples:
+- Hello World
+- Barnes-Hut: a tree-based algorithm to compute fast and approximate time
+  series to the N-body problem.
 
-2) Build the charm++ cache library
-          cd $CHARM_PATH/src/libs/ck-libs/cache
-          make
+1. Install
+----------
+1) Download and install the latest version of Charm++.
+   $ git clone https://charm.cs.illinois.edu/gerrit/charm
+   $ cd charm
+   $ ./build
 
-3) Edit the Makefile.in to set CHARM_PATH to point to the installed charm++ directory
-          CHARM_PATH = /dcsdata/home/nbhat4/Work/software/charm
-   (The default CHARM_PATH is one level up from distree)
+2) Build the Charm++ cache library.
+   $ cd src/libs/ck-libs/cache
+   $ make
 
-4) Run make in src/ to build the distree library libmodulemdt.a
+3) Change directory to the downloaded ParaTreeT-dist source code.
 
+4) Edit CHARM_PATH in Makefile.in to point to the installed Charm++ directory.
+   ex) CHARM_PATH = /dcsdata/home/nbhat4/Work/software/charm
+   (The default CHARM_PATH is one level up from ParaTreeT-dist source code)
 
-------------------------------------------------------------------------------------------------------
-Instructions to build and run Barnes Hut/SPH:
-------------------------------------------------------------------------------------------------------
-1) Build Distree
+4) Run make in src folder to build the static library file (libmodulemdt.a).
 
-2) Run 'make test' in examples/barnes to build and run barnes hut and SPH
+2. Generate Particle Input File
+-------------------------------
+1) Run make inside the inputfiles directory in examples/barnes.
 
+2) Generate a dataset.
+   $ ./plummer <mode write:0; read:1> <numparticles> <output plummer model file>
+   ex) $ ./plummer 0 1000 1k.dat
 
-------------------------------------------------------------------------------------------------------
-Instructions to generate input files for Barnes Hut and SPH:
-------------------------------------------------------------------------------------------------------
-1) Run make inside the inputfiles directory in the barnes directory
+3) Convert the dataset to tipsy format.
+   $ ./tipsyPlummer <input plummer model file> <output tipsy model file>
+   ex) ./tipsyPlummer 1k.dat 1k.tipsy
 
-2) Generate a dataset: ./plummer 0 10000 1k.dat
-   usage: ./plummer <mode write:0; read:1> <numparticles> <output plummer model file>
-
-3) Generate the dataset in tipsy format: ./tipsyPlummer 1k.dat 1k.tipsy
-   usage: ./tipsyPlummer <output plummer model file> <output tipsy model file>
+3. Run Barnes-Hut Example
+-------------------------
+1) Run 'make test' in examples/barnes to build and run the example.
